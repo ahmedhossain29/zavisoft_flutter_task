@@ -9,7 +9,7 @@ class ProductRepositoryImpl implements ProductRepository {
   ProductRepositoryImpl(this.remoteDataSource);
 
   @override
-  Future<List<Product>> getProducts() {
-    return remoteDataSource.getProducts();
+  Future<List<Product>> getProducts({String? category}) {
+    return remoteDataSource.getProducts(category: category);
   }
 }

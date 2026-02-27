@@ -6,7 +6,7 @@ class GetProducts {
 
   GetProducts(this.repository);
 
-  Future<List<Product>> call() {
-    return repository.getProducts();
+  Future<List<Product>> call({String? category}) {
+    return repository.getProducts(category: category);
   }
 }
