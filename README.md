@@ -46,7 +46,8 @@ Clone the repository
 
 Run:
 
-flutter pub get
+flutter pub get 
+
 flutter run
 
 No additional setup is required.
