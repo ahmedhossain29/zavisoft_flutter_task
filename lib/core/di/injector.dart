@@ -17,44 +17,36 @@ final sl = GetIt.instance;
 
 Future<void> init() async {
 
-  /// DataSource
   sl.registerLazySingleton<ProductRemoteDataSource>(
         () => ProductRemoteDataSource(),
   );
 
-  /// Repository
   sl.registerLazySingleton<ProductRepository>(
         () => ProductRepositoryImpl(sl()),
   );
 
-  /// UseCase
   sl.registerLazySingleton<GetProducts>(
         () => GetProducts(sl()),
   );
 
-  /// Cubit  ✅ VERY IMPORTANT
   sl.registerFactory<ProductCubit>(
         () => ProductCubit(sl()),
   );
 
 
 
-  /// DATA SOURCE
   sl.registerLazySingleton<AuthRemoteDataSource>(
         () => AuthRemoteDataSource(),
   );
 
-  /// REPOSITORY
   sl.registerLazySingleton<AuthRepository>(
         () => AuthRepositoryImpl(sl()),
   );
 
-  /// USECASE
   sl.registerLazySingleton<LoginUseCase>(
         () => LoginUseCase(sl()),
   );
 
-  /// CUBIT
   sl.registerFactory<AuthCubit>(
         () => AuthCubit(sl(), sl()),
   );

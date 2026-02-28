@@ -1,287 +1,117 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/di/injector.dart';
-import '../../../auth/presentation/cubit/auth_cubit.dart';
-import '../../../auth/presentation/cubit/auth_state.dart';
-import '../../domain/entities/product.dart';
 import '../cubit/product_cubit.dart';
-import '../cubit/product_state.dart';
+import '../widgets/tab_page.dart';
 
-class HomeScreen extends StatelessWidget {
+
+const _tabs = ["All", "Electronics", "Jewelery"];
+const _categories = ["all", "electronics", "jewelery"];
+
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const DefaultTabController(length: 3, child: _HomeView());
-  }
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeView extends StatelessWidget {
-  const _HomeView();
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabController;
+  late final List<ProductCubit> _cubits;
+  late final List<ScrollController> _scrollControllers;
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      bottomNavigationBar: BlocBuilder<AuthCubit, AuthState>(
-        builder: (context, state) {
-          if (state is AuthSuccess) {
-            return const SizedBox(); // hide
-          }
+  static const double _bannerHeight = 200.0;
 
-          return Container(
-            padding: const EdgeInsets.all(12),
-            color: Colors.orange.shade100,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text("Login to see your profile"),
-                TextButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, "/login");
-                  },
-                  child: const Text("Login"),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-      body: NestedScrollView(
-        floatHeaderSlivers: true,
-        headerSliverBuilder: (context, _) {
-          return [
-            /// 🔹 FIXED SEARCH BAR
-            SliverAppBar(
-              pinned: true,
-              backgroundColor: Colors.white,
-              elevation: 0,
-              titleSpacing: 0,
-              title: const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                child: _SearchBar(),
-              ),
-            ),
-
-            /// 🔹 PROMO SECTION
-            const SliverToBoxAdapter(child: _PromoSection()),
-
-            /// 🔹 STICKY TAB BAR
-            SliverPersistentHeader(
-              pinned: true,
-              delegate: _TabBarDelegate(
-                const TabBar(
-                  labelColor: Colors.black,
-                  indicatorColor: Colors.orange,
-                  tabs: [
-                    Tab(text: "All"),
-                    Tab(text: "Electronics"),
-                    Tab(text: "Jewelery"),
-                  ],
-                ),
-              ),
-            ),
-          ];
-        },
-
-        /// 🔹 TAB CONTENT
-        body: TabBarView(
-          children: [
-            BlocProvider(
-              create: (_) => sl<ProductCubit>()..fetchProducts("all"),
-              child: const ProductTab(category: "all"),
-            ),
-            BlocProvider(
-              create: (_) => sl<ProductCubit>()..fetchProducts("electronics"),
-              child: const ProductTab(category: "electronics"),
-            ),
-            BlocProvider(
-              create: (_) => sl<ProductCubit>()..fetchProducts("jewelery"),
-              child: const ProductTab(category: "jewelery"),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SearchBar extends StatelessWidget {
-  const _SearchBar();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 45,
-      decoration: BoxDecoration(
-        color: Colors.grey.shade200,
-        borderRadius: BorderRadius.circular(25),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: const Row(
-        children: [
-          Icon(Icons.search, color: Colors.grey),
-          SizedBox(width: 8),
-          Text("Search products", style: TextStyle(color: Colors.grey)),
-        ],
-      ),
-    );
-  }
-}
-
-class _PromoSection extends StatelessWidget {
-  const _PromoSection();
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          height: 200,
-          color: Colors.orange.shade100,
-          alignment: Alignment.center,
-          child: const Text("Flash Sale Banner"),
-        ),
-        const SizedBox(height: 12),
-      ],
-    );
-  }
-}
-
-class _TabBarDelegate extends SliverPersistentHeaderDelegate {
-  final TabBar tabBar;
-
-  _TabBarDelegate(this.tabBar);
-
-  @override
-  Widget build(context, shrinkOffset, overlapsContent) {
-    return Container(color: Colors.white, child: tabBar);
-  }
-
-  @override
-  double get maxExtent => tabBar.preferredSize.height;
-
-  @override
-  double get minExtent => tabBar.preferredSize.height;
-
-  @override
-  bool shouldRebuild(_) => false;
-}
-
-class ProductTab extends StatefulWidget {
-  final String category;
-
-  const ProductTab({super.key, required this.category});
-
-  @override
-  State<ProductTab> createState() => _ProductTabState();
-}
-
-class _ProductTabState extends State<ProductTab>
-    with AutomaticKeepAliveClientMixin {
-  @override
-  bool get wantKeepAlive => true;
+  int _currentIndex = 0;
 
   @override
   void initState() {
     super.initState();
-    print("Init: ${widget.category}");
+    _tabController = TabController(length: _tabs.length, vsync: this);
+
+    _cubits = List.generate(_tabs.length, (i) {
+      final cubit = sl<ProductCubit>();
+      cubit.fetchProducts(_categories[i]);
+      return cubit;
+    });
+
+    _scrollControllers = List.generate(
+      _tabs.length,
+          (_) => ScrollController(),
+    );
+
+    _tabController.addListener(_onTabChanged);
+  }
+
+  void _onTabChanged() {
+    if (_tabController.indexIsChanging) return;
+
+    final newIndex = _tabController.index;
+    if (newIndex == _currentIndex) return;
+
+    _syncHeaderOffset(from: _currentIndex, to: newIndex);
+
+    setState(() => _currentIndex = newIndex);
+  }
+
+
+  void _syncHeaderOffset({required int from, required int to}) {
+    final fromOffset = _scrollControllers[from].hasClients
+        ? _scrollControllers[from].offset
+        : 0.0;
+
+    final toController = _scrollControllers[to];
+    if (!toController.hasClients) return;
+
+    final toOffset = toController.offset;
+    final double headerState = fromOffset.clamp(0.0, _bannerHeight);
+
+    final double productScroll =
+    (toOffset - _bannerHeight).clamp(0.0, double.infinity);
+
+    final double targetOffset = headerState + productScroll;
+
+    if ((toOffset - targetOffset).abs() > 1.0) {
+      toController.jumpTo(targetOffset);
+    }
+  }
+
+  Future<void> _onRefresh() async {
+    await _cubits[_currentIndex].refresh(_categories[_currentIndex]);
+  }
+
+  @override
+  void dispose() {
+    _tabController.removeListener(_onTabChanged);
+    _tabController.dispose();
+    for (final c in _cubits) c.close();
+    for (final s in _scrollControllers) s.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    super.build(context);
-
-    return BlocBuilder<ProductCubit, ProductState>(
-      builder: (context, state) {
-        if (state is ProductLoading) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        if (state is ProductLoaded) {
-          return GridView.builder(
-            key: PageStorageKey(widget.category),
-        //    physics: const NeverScrollableScrollPhysics(),
-            physics: const ClampingScrollPhysics(),
-            // important
-            padding: const EdgeInsets.all(12),
-            itemCount: state.products.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 10,
-              mainAxisSpacing: 12,
-              childAspectRatio: 0.68,
+    return Scaffold(
+      body: Stack(
+        children: List.generate(_tabs.length, (i) {
+          return Offstage(
+            offstage: _currentIndex != i,
+            child: TabPage(
+              scrollController: _scrollControllers[i],
+              tabController: _tabController,
+              cubit: _cubits[i],
+              category: _categories[i],
+              onRefresh: _onRefresh,
             ),
-            itemBuilder: (context, index) {
-              final product = state.products[index];
-              return _ProductCard(product: product);
-            },
           );
-        }
-
-        return const SizedBox();
-      },
-    );
-  }
-}
-
-class _ProductCard extends StatelessWidget {
-  final Product product;
-
-  const _ProductCard({required this.product});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.shade200,
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            flex: 6,
-            child: Padding(
-              padding: const EdgeInsets.all(10),
-              child: Image.network(product.image, fit: BoxFit.contain),
-            ),
-          ),
-
-          Expanded(
-            flex: 4,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    product.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 13),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    "\$${product.price}",
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.orange,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
+        }),
       ),
     );
   }
 }
+
+
+
+
+
+

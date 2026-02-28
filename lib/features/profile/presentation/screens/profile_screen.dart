@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:http/http.dart' as http;
+import 'package:zavisaft_flutter_task/core/common_widgets/custom_text.dart';
+import '../../../../core/utils/utils.dart';
 import '../../../auth/presentation/cubit/auth_cubit.dart';
 import '../../../auth/presentation/cubit/auth_state.dart';
 
@@ -13,7 +15,7 @@ class ProfileScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
-        title: const Text("My Profile"),
+        title: const CustomText(text: "My Profile"),
         centerTitle: true,
       ),
       body: BlocBuilder<AuthCubit, AuthState>(
@@ -38,7 +40,7 @@ class ProfileScreen extends StatelessWidget {
                 child: Column(
                   children: [
 
-                    /// 🔹 Profile Card
+
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
@@ -55,7 +57,7 @@ class ProfileScreen extends StatelessWidget {
                       child: Column(
                         children: [
 
-                          /// Avatar
+
                           CircleAvatar(
                             radius: 50,
                             backgroundColor: Colors.orange.shade100,
@@ -68,32 +70,30 @@ class ProfileScreen extends StatelessWidget {
 
                           const SizedBox(height: 16),
 
-                          /// Name
-                          Text(
-                            "${user["name"]["firstname"]} ${user["name"]["lastname"]}",
-                            style: const TextStyle(
+
+                          CustomText(
+                            text: "${user["name"]["firstname"]} ${user["name"]["lastname"]}",
+
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
-                            ),
+
                           ),
 
-                          const SizedBox(height: 8),
+                          Utils.verticalSpace(8.0),
 
-                          /// Email
-                          Text(
+
+                          CustomText(text:
                             user["email"],
-                            style: TextStyle(
                               fontSize: 14,
                               color: Colors.grey.shade600,
-                            ),
                           ),
                         ],
                       ),
                     ),
 
-                    const SizedBox(height: 40),
+                    Utils.verticalSpace(40.0),
 
-                    /// 🔹 Logout Button
+
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -107,12 +107,11 @@ class ProfileScreen extends StatelessWidget {
                         onPressed: () {
                           context.read<AuthCubit>().logout();
                         },
-                        child: const Text(
+                        child: const CustomText(text:
                           "Logout",
-                          style: TextStyle(
+
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                          ),
                         ),
                       ),
                     )
@@ -143,7 +142,7 @@ class _LoginRequired extends StatelessWidget {
         onPressed: () {
           Navigator.pushNamed(context, "/login");
         },
-        child: const Text("Login to View Profile"),
+        child: const CustomText(text: "Login to View Profile"),
       ),
     );
   }

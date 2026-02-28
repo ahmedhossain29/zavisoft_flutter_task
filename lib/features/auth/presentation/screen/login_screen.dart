@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zavisaft_flutter_task/core/common_widgets/custom_text.dart';
+import '../../../../core/utils/utils.dart';
 import '../../../auth/presentation/cubit/auth_cubit.dart';
 import '../../../auth/presentation/cubit/auth_state.dart';
 
@@ -26,28 +28,25 @@ class LoginScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
                   const SizedBox(height: 40),
 
                   /// 🔥 Welcome Text
-                  const Text(
-                    "Welcome Back 👋",
-                    style: TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  const CustomText(
+                    text: "Welcome Back 👋",
+
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
                   ),
 
-                  const SizedBox(height: 8),
+                  Utils.verticalSpace(8.0),
 
-                  Text(
-                    "Login to continue shopping",
-                    style: TextStyle(
-                      color: Colors.grey.shade600,
-                    ),
+                  CustomText(
+                    text: "Login to continue shopping",
+
+                    color: Colors.grey.shade600,
                   ),
 
-                  const SizedBox(height: 40),
+                  Utils.verticalSpace(40.0),
 
                   /// 🔹 Username Field
                   _buildTextField(
@@ -56,7 +55,7 @@ class LoginScreen extends StatelessWidget {
                     icon: Icons.person_outline,
                   ),
 
-                  const SizedBox(height: 16),
+                  Utils.verticalSpace(16.0),
 
                   /// 🔹 Password Field
                   _buildTextField(
@@ -66,7 +65,7 @@ class LoginScreen extends StatelessWidget {
                     obscure: true,
                   ),
 
-                  const SizedBox(height: 30),
+                  Utils.verticalSpace(30.0),
 
                   /// 🔹 Login Button
                   SizedBox(
@@ -85,18 +84,17 @@ class LoginScreen extends StatelessWidget {
                           passwordController.text.trim(),
                         );
                       },
-                      child: state is AuthLoading
-                          ? const CircularProgressIndicator(
-                        color: Colors.white,
-                      )
-                          : const Text(
-                        "Login",
-                        style: TextStyle(fontSize: 16),
-                      ),
+                      child:
+                          state is AuthLoading
+                              ? const CircularProgressIndicator(
+                                color: Colors.white,
+                              )
+                              : const CustomText(text: "Login", fontSize: 16),
                     ),
                   ),
 
-                  const SizedBox(height: 30),
+
+                  Utils.verticalSpace(30.0),
 
                   /// Divider
                   Row(
@@ -104,13 +102,13 @@ class LoginScreen extends StatelessWidget {
                       Expanded(child: Divider(color: Colors.grey.shade300)),
                       const Padding(
                         padding: EdgeInsets.symmetric(horizontal: 8),
-                        child: Text("OR"),
+                        child: CustomText(text: "OR"),
                       ),
                       Expanded(child: Divider(color: Colors.grey.shade300)),
                     ],
                   ),
 
-                  const SizedBox(height: 20),
+                  Utils.verticalSpace(20.0),
 
                   /// 🔹 Login With Phone (UI only)
                   _socialButton(
@@ -119,7 +117,7 @@ class LoginScreen extends StatelessWidget {
                     color: Colors.green,
                   ),
 
-                  const SizedBox(height: 12),
+                  Utils.verticalSpace(12.0),
 
                   /// 🔹 Login With Google (UI only)
                   _socialButton(
@@ -128,7 +126,7 @@ class LoginScreen extends StatelessWidget {
                     color: Colors.red,
                   ),
 
-                  const SizedBox(height: 40),
+                  Utils.verticalSpace(40.0),
                 ],
               ),
             );
@@ -152,8 +150,10 @@ class LoginScreen extends StatelessWidget {
         prefixIcon: Icon(icon),
         filled: true,
         fillColor: Colors.grey.shade100,
-        contentPadding:
-        const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
@@ -178,8 +178,8 @@ class LoginScreen extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(icon, color: color),
-          const SizedBox(width: 10),
-          Text(text),
+          Utils.horizontalSpace(10.0),
+          CustomText(text: text),
         ],
       ),
     );
